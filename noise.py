@@ -4,7 +4,7 @@ Design choice: noise is applied inside each word and never adds or removes a
 word boundary. Word-level NER labels therefore stay aligned one-to-one with the
 noisy words, and no label re-alignment is needed. The cost of this choice is
 that segmentation errors (merged or split words), which are frequent in real
-OCR output and strongly hurt NER according to Hamdi et al. (2023), are not
+OCR output and strongly hurt NER according to prior work (see README), are not
 simulated. This is stated as a limitation in the README.
 
 Two settings control the noise:
