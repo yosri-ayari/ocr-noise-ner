@@ -1,0 +1,35 @@
+=== rate 0.00 (measured CER 0.000) ===
+SOCCER - JAPAN GET LUCKY WIN , CHINA IN SURPRISE DEFEAT .
+Nadim Ladki
+AL-AIN , United Arab Emirates 1996-12-06
+
+=== rate 0.02 (measured CER 0.019) ===
+SOCCER - JAPAN GET LUCKY WIN , CHINA IN SURPRIE DEEAT .
+Nadim Ladki
+AL-AIN , United Arab Emirates 1996-12-06
+
+=== rate 0.05 (measured CER 0.048) ===
+SOCCER - JAPAN GET LUCKY WIN , CHINA IN SURPRIE DEEAT .
+Nadim Ladki
+AL-AIN , United Arab Emirates 1996-12-06
+
+=== rate 0.10 (measured CER 0.096) ===
+SOCCER - JAPAN GET LUCKY WIN , CHINA IN SURPRIE DEEAT .
+Nadim Laki
+AL-AIN , United Arab Emiates 1996-12-06
+
+=== rate 0.15 (measured CER 0.144) ===
+SOCCER - JAPAN GET LUCKY WIN , CHIA IN SURPRSE DFEAT .
+Nadim Ldk
+AL-AIN , United Arab Eirates 1996-12-06
+
+=== rate 0.20 (measured CER 0.191) ===
+SOCCER - JAPAN GET LUCKY WIN , CHIA IN SURPRSE DFEAT .
+adim adi
+AL-AIN , Unite Ara Emirates 1996-12-06
+
+=== rate 0.30 (measured CER 0.283) ===
+SOCER - JAPAN E LUCKY WIN , HINA I SRPRS DEA .
+Naim Ladki
+AL-A , Unted Arab Eirates 199612-
+

@@ -86,20 +86,82 @@ figures with `plot_results.py` and `plot_compare.py`. All outputs go to
 `results/`: one CSV per experiment (one row per noise level and seed), figures,
 a Markdown summary table and noisy example sentences.
 
+## Key findings
+
+- On clean text the model reaches 0.913 micro F1. With 5% of characters
+  corrupted it drops to 0.793, and to 0.366 at 31%.
+- At the noise level of the mixed OCR degradations reported in [1] (CER 6.9%,
+  about 23% of words affected), the transformer keeps 0.758 micro F1, against
+  0.708 for the BiLSTM-CNN-CRF. At heavy noise, however, the synthetic setting
+  here is much harsher than real OCR output.
+- **Errors on the first character are the most damaging**: at equal share of
+  corrupted words, a substitution on the first character costs 7 to 17 F1
+  points more than the same substitution elsewhere in the word.
+- **Losing the capital letter alone is enough**: flipping the case of the first
+  letter hurts even more than a substitution, and when every first letter is
+  flipped, only 7% of person names are still found.
+- Deletions hurt slightly less than insertions, which hurt slightly less than
+  substitutions, but the gap is small (2 to 4 F1 points).
+- Noise makes the model **miss locations** (high precision, collapsing recall)
+  but **invent organisations** (collapsing precision): garbled tokens tend to be
+  tagged as ORG.
+
 ## Results
+
+All figures are means over 3 seeds on the full CoNLL-2003 test split. Standard
+deviations never exceed 0.011 F1, so differences of a few points are stable.
+Values marked "interpolated" are read on the curves at a common x value, so that
+conditions are compared at equal noise.
 
 ### Q1. Overall degradation
 
-<!-- TODO: paste results/en_mixed_any_summary.md here, and add a line comparing
-your F1 at CER around 2% and 7% with the 87.45 and 70.82 reported in [1]. -->
+| Edit rate | Measured CER | Words changed | Micro F1 (mean ± sd) | PER F1 | LOC F1 | ORG F1 | MISC F1 |
+|---|---|---|---|---|---|---|---|
+| 0.00 | 0.0% | 0.0% | 0.913 ± 0.000 | 0.957 | 0.931 | 0.899 | 0.804 |
+| 0.02 | 2.1% | 7.9% | 0.862 ± 0.003 | 0.917 | 0.881 | 0.836 | 0.756 |
+| 0.05 | 5.2% | 18.1% | 0.793 ± 0.001 | 0.861 | 0.807 | 0.759 | 0.692 |
+| 0.10 | 10.4% | 32.4% | 0.686 ± 0.005 | 0.758 | 0.707 | 0.643 | 0.586 |
+| 0.15 | 15.6% | 43.6% | 0.590 ± 0.010 | 0.683 | 0.595 | 0.544 | 0.489 |
+| 0.20 | 20.7% | 52.3% | 0.506 ± 0.001 | 0.578 | 0.502 | 0.488 | 0.386 |
+| 0.30 | 30.8% | 64.3% | 0.366 ± 0.005 | 0.405 | 0.338 | 0.386 | 0.227 |
 
 ![Micro F1 against CER](results/en_mixed_any_f1.png)
 
+Comparison with the figures reported for a BiLSTM-CNN-CRF on real OCR output
+[1]. The transformer values are interpolated at the same CER, and at the same
+share of corrupted words (the word error rate, WER, in [1]):
+
+| OCR condition in [1] | CER / WER | BiLSTM-CNN-CRF [1] | Transformer, same CER | Transformer, same share of words |
+|---|---|---|---|---|
+| Clean text | 0% / 0% | 0.909 | 0.913 | 0.913 |
+| Clean images, re-OCRed (LEV-0) | 1.7% / 8.5% | 0.875 | 0.871 | 0.858 |
+| Mixed degradations (LEV-MIX) | 6.9% / 22.8% | 0.708 | 0.758 | 0.758 |
+| Heavy blurring (Blur LEV-2) | 41.3% / 54.0% | 0.603 | beyond the tested range (0.366 at 31%) | 0.486 |
+
 ### Q2. Edit operations
+
+| CER (interpolated) | Deletion | Insertion | Substitution |
+|---|---|---|---|
+| 5% | 0.813 | 0.809 | 0.794 |
+| 10% | 0.711 | 0.709 | 0.691 |
+| 20% | 0.549 | 0.535 | 0.514 |
+| 28% | 0.444 | 0.418 | 0.402 |
 
 ![Micro F1 by edit operation](results/compare_edit_types.png)
 
 ### Q3. Error position
+
+One edit per corrupted word; `first` and `inner` corrupt exactly the same words.
+
+| Words corrupted (interpolated) | Substitution, first character | Substitution, other character | Case flip, first character |
+|---|---|---|---|
+| 20% | 0.741 | 0.809 | 0.710 |
+| 40% | 0.583 | 0.703 | 0.539 |
+| 60% | 0.421 | 0.573 | 0.371 |
+| 72% | 0.321 | 0.488 | 0.264 |
+
+With every eligible first letter flipped (72% of words), recall falls to 0.07
+for PER, 0.24 for LOC and 0.31 for ORG.
 
 ![Micro F1 by error position](results/compare_positions.png)
 
@@ -107,17 +169,56 @@ your F1 at CER around 2% and 7% with the 87.45 and 70.82 reported in [1]. -->
 
 ![F1 per entity type](results/en_mixed_any_by_type.png)
 
+Precision and recall under mixed noise:
+
+| CER | LOC precision | LOC recall | ORG precision | ORG recall | PER precision | PER recall |
+|---|---|---|---|---|---|---|
+| 0% | 0.93 | 0.93 | 0.89 | 0.91 | 0.96 | 0.96 |
+| 10% | 0.84 | 0.61 | 0.55 | 0.77 | 0.74 | 0.77 |
+| 31% | 0.69 | 0.22 | 0.32 | 0.48 | 0.50 | 0.34 |
+
 ## Discussion
 
-<!-- TODO, in your own words:
-- Q1: does the transformer hold up better than the BiLSTM-CNN-CRF? Careful: the
-  models, the noise and the pipeline all differ, so this is an indication, not
-  a controlled comparison.
-- Q2 and Q3: are the earlier observations reproduced under controlled noise? If
-  not, what could explain the difference (observational vs controlled design,
-  sub-word tokenisation of transformers, ...)?
-- Q4: which types are the most fragile, and a hypothesis for why.
-- Read the example files and a few model errors by hand: what goes wrong? -->
+**Q1.** At low noise the transformer behaves like the BiLSTM-CNN-CRF, and at
+moderate noise it holds up better (0.758 against 0.708 at the LEV-MIX level),
+which is consistent with the robustness usually attributed to sub-word
+representations. At heavy noise the picture reverses: the synthetic setting is
+much harsher than heavily blurred real OCR, even when compared at the same share
+of corrupted words (0.486 against 0.603). Two explanations are likely. First,
+errors here are spread uniformly over all words, whereas real OCR errors are
+correlated and concentrated, so the same CER leaves more words intact. Second,
+real OCR errors are visually constrained and may spare the shapes that matter,
+such as capital letters. CER alone is therefore not enough to describe a noise
+level: how errors are distributed matters as much as how many there are. Since
+models, noise and pipelines all differ, this comparison is an indication, not a
+controlled result.
+
+**Q2.** The ordering reported in [1] is reproduced (deletions least harmful,
+substitutions most harmful), but the differences are small. A possible reason is
+that WordPiece splits a damaged word into several pieces: a word missing one
+letter often keeps recognisable pieces, while a substituted character creates
+unusual pieces. Insertions were not clearly worse than deletions here, unlike in
+[1], where the analysis covered only entities hit by a single real OCR error.
+
+**Q3.** The position effect is the strongest result. Because the same words are
+corrupted in both conditions, the gap between first and inner errors can only
+come from the position. The case-flip condition shows that capitalisation alone
+drives much of it: `dslim/bert-base-NER` is a cased model and relies heavily on
+capital letters to detect entities, especially person names. This matches the
+observation in [1] that first-character errors are critical, and isolates its
+main cause. For historical documents, where OCR often confuses capitals and
+lowercase letters, correcting the case of the first letter looks like a cheap
+and effective post-OCR step.
+
+**Q4.** Persons are the most robust type throughout, probably because they come
+with strong context cues (titles, first name and surname patterns, reporting
+verbs). MISC is always the weakest, as on clean text. Locations and
+organisations fail in opposite ways. For LOC, precision stays high while recall
+collapses: the model stops recognising damaged place names, which it probably
+identifies largely from their surface form. For ORG, precision collapses: the
+model tags garbled tokens as organisations, maybe because unfamiliar strings
+look like acronyms or company names. OCR noise therefore does not only remove
+entities, it also creates false ones.
 
 ## Limitations
 
